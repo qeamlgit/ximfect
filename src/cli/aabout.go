@@ -229,7 +229,34 @@ func listLibs(ctx *tool.Context) error {
 }
 
 func dev(ctx *tool.Context) error {
-	//panic("hello")
+	ctx.Log.Info("creating TCC state")
+	tcc := vm.NewTCC()
+	defer tcc.Delete()
+
+	ctx.Log.Info("setting output type")
+	outType := tcc.SetOutputType(vm.OutputMemory)
+	if !outType {
+		return errors.New("could not set output type")
+	}
+
+	ctx.Log.Info("compiling")
+	compile := tcc.CompileString("int myfunc() { return 123; }")
+	if !compile {
+		return errors.New("could not compile")
+	}
+
+	ctx.Log.Info("relocating")
+	reloc := tcc.Relocate()
+	if !reloc {
+		return errors.New("could not relocate")
+	}
+
+	ctx.Log.Info("getting symbol")
+	myfunc := tcc.GetSymbol("myfunc")
+	if myfunc == nil {
+		return errors.New("could not get compiled function")
+	}
+
 	return nil
 }
 
